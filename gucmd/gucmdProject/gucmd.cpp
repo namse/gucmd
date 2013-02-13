@@ -62,11 +62,47 @@ bool CommandProcessing()
 			FindClose(hDir);
 		}
 	}
-	else if ( !_tcscmp(GCommandTokenList[0],_T("blahabhabhah")) )
+	else if ( !_tcscmp(GCommandTokenList[0],_T("md")) )
+	{
+		wchar_t directory[MAX_STR_LEN] = L"";
+		for(int i =3; i<wcslen(copyCommand); i++)
+			directory[i-3] = copyCommand[i];
+		if(CreateDirectory(directory,NULL) == -1) wprintf(L"Error create directory : %s",directory);
+		
+	}
+	
+	else if ( !_tcscmp(GCommandTokenList[0],_T("rd")) )
+	{
+		wchar_t directory[MAX_STR_LEN] = L"";
+		for(int i =3; i<wcslen(copyCommand); i++)
+			directory[i-3] = copyCommand[i];
+		if(RemoveDirectory(directory) == -1) wprintf(L"Error Remove directory : %s",directory);
+	}
+	else if ( !_tcscmp(GCommandTokenList[0],_T("cd")) )
+	{
+		wchar_t directory[MAX_STR_LEN] = L"";
+		for(int i =3; i<wcslen(copyCommand); i++)
+			directory[i-3] = copyCommand[i];
+		if(SetCurrentDirectory(directory) == -1) wprintf(L"Error set current directory : %s",directory);
+		
+		wchar_t currentDirectory[MAX_PATH] = L"";
+		
+		GetCurrentDirectory(MAX_PATH,currentDirectory);
+		wprintf(L"Current Directory : %s",currentDirectory);
+		
+	}
+	else if ( !_tcscmp(GCommandTokenList[0],_T("md")) )
 	{
 
 	}
-	
+	else if ( !_tcscmp(GCommandTokenList[0],_T("md")) )
+	{
+
+	}
+	else if ( !_tcscmp(GCommandTokenList[0],_T("md")) )
+	{
+
+	}
 	else // example : abc.exe
 	{
 		STARTUPINFO si={0,};
