@@ -20,7 +20,7 @@ bool CommandProcessing()
 	if ( !_wcsicmp(GCommandString, L"exit") )
 		return false ;
 	//프로그램 실행을 위해서 복사//
-	wchar_t copyCommand[MAX_STR_LEN];
+	wchar_t copyCommand[MAX_STR_LEN] = L"";
 	wcscpy_s(copyCommand,GCommandString);
 
 	wchar_t* nextToken = NULL ;
@@ -37,9 +37,30 @@ bool CommandProcessing()
 	wprintf(L"\n") ;
 
 	//Process by first string - GCommandTokenList[0]//
-	if( !_tcscmp(GCommandTokenList[0],_T("blahbalh")) )
+	if( !_tcscmp(GCommandTokenList[0],_T("dir")) )
 	{
-		return TRUE;
+		WIN32_FIND_DATA findData;
+		HANDLE hDir = INVALID_HANDLE_VALUE;
+		
+		//찾으려는 디렉토리 다시 구하기. 구지 그러는 이유는 program files같이 토큰에 의해서 잘라지는 경우 대비하여서...//
+		wchar_t directory[MAX_STR_LEN] = L"";
+		for(int i =4; i<wcslen(copyCommand); i++)
+			directory[i-4] = copyCommand[i];
+		wcsncat(directory,L"\\*",3);
+		hDir = FindFirstFile(directory, &findData);
+		wprintf(L"%s",directory);
+		if(hDir == INVALID_HANDLE_VALUE){
+			wprintf(L"Error : Invalid handle value");
+		}
+		else
+		{
+			do{
+				wprintf(L"\nFile Name : %s",findData.cFileName);
+				if(findData.nFileSizeLow > 0)
+					wprintf(L" @@ Data Size : %dbyte",findData.nFileSizeLow);
+			}while(FindNextFile(hDir, &findData));
+			FindClose(hDir);
+		}
 	}
 	else if ( !_tcscmp(GCommandTokenList[0],_T("blahabhabhah")) )
 	{
