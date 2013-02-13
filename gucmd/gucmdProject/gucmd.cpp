@@ -17,6 +17,8 @@ bool CommandProcessing()
 	wprintf(L"MyShell>> ") ;
 	
 	_getws_s(GCommandString) ;
+	//프로그램 실행을 위해서 복사//
+//	wchar_t copyCommmand[MAX_STR_LEN];
 	if ( !_wcsicmp(GCommandString, L"exit") )
 		return false ;
 
@@ -33,6 +35,34 @@ bool CommandProcessing()
 
 	wprintf(L"\n") ;
 
+	//Process by first string - GCommandTokenList[0]//
+	if( !_tcscmp(GCommandTokenList[0],_T("blahbalh")) )
+	{
+		return TRUE;
+	}
+	else if ( !_tcscmp(GCommandTokenList[0],_T("blahabhabhah")) )
+	{
+
+	}
+	
+	else // example : abc.exe
+	{
+		STARTUPINFO si={0,};
+		PROCESS_INFORMATION pi;
+		DWORD returnValue;
+		
+		si.cb = sizeof(si);
+		//입력받은 그대로(abc.exe 1 2) 프로세스 만들어서 실행
+		CreateProcess(NULL,GCommandString,NULL,NULL,TRUE,0,NULL,NULL,&si,&pi);
+		CloseHandle(pi.hThread); //usage count 맞춰주기
+		GetExitCodeProcess(pi.hProcess, &returnValue);
+
+		wprintf(L"\nReturn Value : %d\n",returnValue);
+		if(returnValue == -1) wprintf(L"EXECUTE ERROR\n");
+	}
+
+	
+	wprintf(L"\n") ;
 	return true ;
 }
 int _tmain(int argc, _TCHAR* argv[])
