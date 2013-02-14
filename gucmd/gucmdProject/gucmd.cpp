@@ -116,9 +116,31 @@ bool CommandProcessing()
 			file2[i-l-2] = copyCommand[i];
 		if(MoveFile(file1,file2) == 0) wprintf(L"Error Rename file : %s , %s",file1,file2);
 	}
-	else if ( !_tcscmp(GCommandTokenList[0],_T("md")) )
+	else if ( !_tcscmp(GCommandTokenList[0],_T("type")) )
 	{
-
+		wchar_t directory[MAX_STR_LEN] = L"";
+		const DWORD maxBuf = 1024;
+		wchar_t buf[maxBuf] = L"";
+		DWORD readedByte = 0;
+		for(int i =5; i<wcslen(copyCommand); i++)
+			directory[i-5] = copyCommand[i];
+		HANDLE hFile = CreateFile(directory,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+		if(hFile == INVALID_HANDLE_VALUE)
+		{
+			wprintf(L"Error Type-Open file : %s",directory); // 파일이 안열린것
+		}
+		else
+		{
+			do{
+				if(ReadFile(hFile,buf,maxBuf,&readedByte,NULL) == false)
+				{
+					wprintf(L"Error Type-Read file : %s",directory); // 파일 못읽은것
+					break;
+				}
+				printf("%s\n%d",buf,readedByte); // 유니코드 안될때 있으니까..
+			}while(readedByte==maxBuf);
+		}
+		CloseHandle(hFile);
 	}
 	else // example : abc.exe
 	{
