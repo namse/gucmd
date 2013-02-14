@@ -48,7 +48,6 @@ bool CommandProcessing()
 			directory[i-4] = copyCommand[i];
 		wcsncat(directory,L"\\*",3);
 		hDir = FindFirstFile(directory, &findData);
-		wprintf(L"%s",directory);
 		if(hDir == INVALID_HANDLE_VALUE){
 			wprintf(L"Error : Invalid handle value");
 		}
@@ -67,7 +66,7 @@ bool CommandProcessing()
 		wchar_t directory[MAX_STR_LEN] = L"";
 		for(int i =3; i<wcslen(copyCommand); i++)
 			directory[i-3] = copyCommand[i];
-		if(CreateDirectory(directory,NULL) == -1) wprintf(L"Error create directory : %s",directory);
+		if(CreateDirectory(directory,NULL) == 0) wprintf(L"Error create directory : %s",directory);
 		
 	}
 	
@@ -76,14 +75,14 @@ bool CommandProcessing()
 		wchar_t directory[MAX_STR_LEN] = L"";
 		for(int i =3; i<wcslen(copyCommand); i++)
 			directory[i-3] = copyCommand[i];
-		if(RemoveDirectory(directory) == -1) wprintf(L"Error Remove directory : %s",directory);
+		if(RemoveDirectory(directory) == 0) wprintf(L"Error Remove directory : %s",directory);
 	}
 	else if ( !_tcscmp(GCommandTokenList[0],_T("cd")) )
 	{
 		wchar_t directory[MAX_STR_LEN] = L"";
 		for(int i =3; i<wcslen(copyCommand); i++)
 			directory[i-3] = copyCommand[i];
-		if(SetCurrentDirectory(directory) == -1) wprintf(L"Error set current directory : %s",directory);
+		if(SetCurrentDirectory(directory) == 0) wprintf(L"Error set current directory : %s",directory);
 		
 		wchar_t currentDirectory[MAX_PATH] = L"";
 		
@@ -91,13 +90,31 @@ bool CommandProcessing()
 		wprintf(L"Current Directory : %s",currentDirectory);
 		
 	}
-	else if ( !_tcscmp(GCommandTokenList[0],_T("md")) )
+	else if ( !_tcscmp(GCommandTokenList[0],_T("del")) )
 	{
-
+		wchar_t directory[MAX_STR_LEN] = L"";
+		for(int i =4; i<wcslen(copyCommand); i++)
+			directory[i-4] = copyCommand[i];
+		if(DeleteFile(directory) == 0) wprintf(L"Error delete file : %s",directory);
+		
 	}
-	else if ( !_tcscmp(GCommandTokenList[0],_T("md")) )
+	else if ( !_tcscmp(GCommandTokenList[0],_T("ren")) )
 	{
-
+		wchar_t file1[MAX_STR_LEN] = L"";
+		wchar_t file2[MAX_STR_LEN] = L"";
+		int l;
+		for(int i=wcslen(copyCommand); i>=4; i--)
+		{
+			if(copyCommand[i] == '>')
+			{
+				l = i;
+			}
+		}
+		for(int i=4; i<=l-1;i++)
+			file1[i-4] = copyCommand[i];
+		for(int i=l+2; i<wcslen(copyCommand);i++)
+			file2[i-l-2] = copyCommand[i];
+		if(MoveFile(file1,file2) == 0) wprintf(L"Error Rename file : %s , %s",file1,file2);
 	}
 	else if ( !_tcscmp(GCommandTokenList[0],_T("md")) )
 	{
@@ -127,6 +144,9 @@ bool CommandProcessing()
 int _tmain(int argc, _TCHAR* argv[])
 {
 	_wsetlocale(LC_ALL, L"Korean") ;
+	//파일 지우기를 위한 임시파일 생성//
+	HANDLE hfile = CreateFile (L"a.txt",GENERIC_WRITE,FILE_SHARE_WRITE,0,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,0);
+	CloseHandle(hfile);
 
 	while ( CommandProcessing() ) ;
 
