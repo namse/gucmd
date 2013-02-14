@@ -11,7 +11,34 @@ const wchar_t* SEPS = L" ,\t\n" ;
 
 wchar_t GCommandString[MAX_STR_LEN] ;
 wchar_t GCommandTokenList[CMD_TOKEN_NUM][MAX_STR_LEN] ;
+wchar_t GCommandByPipeList[CMD_TOKEN_NUM][MAX_STR_LEN] ;
+bool CommandExecute(wchar_t command[], HANDLE* hReadPipe, HANDLE* hWritePipe)
+{
+	STARTUPINFO si={0,};
+	PROCESS_INFORMATION pi;
+	DWORD returnValue;
+		
+	si.cb = sizeof(si);
+	if(hReadPipe == NULL) si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+	else si.hStdInput = *hReadPipe;
+	if(hWritePipe == NULL) si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+	else si.hStdOutput = *hWritePipe;
+	si.dwFlags |= STARTF_USESTDHANDLES;
 
+	//입력받은 그대로(abc.exe 1 2) 프로세스 만들어서 실행
+	CreateProcess(NULL,command,NULL,NULL,TRUE,0,NULL,NULL,&si,&pi);
+
+	CloseHandle(pi.hThread); //usage count 맞춰주기
+	if( hReadPipe != NULL )CloseHandle(*hReadPipe);
+	if( hWritePipe != NULL )CloseHandle(*hWritePipe);
+
+	WaitForSingleObject(pi.hProcess, INFINITE);
+	GetExitCodeProcess(pi.hProcess, &returnValue);
+
+	if(returnValue == -1) wprintf(L"EXECUTE ERROR\n");
+	//CloseHandle(pi.hProcess);
+	return true;
+}
 bool CommandProcessing()
 {
 	wprintf(L"MyShell>> ") ;
@@ -36,6 +63,46 @@ bool CommandProcessing()
 
 	wprintf(L"\n") ;
 
+	// | 있는지 확인//
+	for(int i=0; i<tokenNum;i++)
+	{
+		if( wcsncmp(GCommandTokenList[i],L"|",5) == 0)
+		{
+			// 다시 토큰 자르기
+			HANDLE *hReadPipe, *hWritePipe, *hPreReadPipe;
+			SECURITY_ATTRIBUTES pipeSA = {sizeof(SECURITY_ATTRIBUTES),NULL,TRUE};
+			nextToken = NULL;
+			tokenNum = 0;
+			token = wcstok_s(copyCommand,L"|",&nextToken);
+			while( NULL != token )
+			{
+				if(tokenNum >0) token = token + sizeof(' '); // 공백 지우기
+				wcscpy_s(GCommandByPipeList[tokenNum++], token);
+				token = wcstok_s(0,L"|",&nextToken);
+				
+			}
+				hPreReadPipe = NULL;
+			for(int i=0; i<tokenNum;i++)
+			{
+				hReadPipe = new HANDLE();
+				if(i == tokenNum-1)
+				{
+					//HANDLE _stdout = GetStdHandle(STD_OUTPUT_HANDLE);
+					//hWritePipe = &_stdout;
+					hWritePipe = NULL;
+				}
+				else
+				{
+					hWritePipe = new HANDLE();
+					CreatePipe(hReadPipe,hWritePipe,&pipeSA,0);
+				}
+				CommandExecute(GCommandByPipeList[i],hPreReadPipe,hWritePipe);
+				
+				hPreReadPipe = hReadPipe;
+			}
+			return true;
+		}
+	}
 	//Process by first string - GCommandTokenList[0]//
 	if( !_tcscmp(GCommandTokenList[0],_T("dir")) )
 	{
@@ -115,7 +182,7 @@ bool CommandProcessing()
 		for(int i=l+2; i<wcslen(copyCommand);i++)
 			file2[i-l-2] = copyCommand[i];
 		if(MoveFile(file1,file2) == 0) wprintf(L"Error Rename file : %s , %s",file1,file2);
-	}
+	}/*
 	else if ( !_tcscmp(GCommandTokenList[0],_T("type")) )
 	{
 		wchar_t directory[MAX_STR_LEN] = L"";
@@ -137,11 +204,14 @@ bool CommandProcessing()
 					wprintf(L"Error Type-Read file : %s",directory); // 파일 못읽은것
 					break;
 				}
-				printf("%s\n%d",buf,readedByte); // 유니코드 안될때 있으니까..
+				printf("%s",buf); // 유니코드 안될때 있으니까..
 			}while(readedByte==maxBuf);
 		}
 		CloseHandle(hFile);
 	}
+	*/
+	else CommandExecute(copyCommand,NULL,NULL);
+	/*
 	else // example : abc.exe
 	{
 		STARTUPINFO si={0,};
@@ -157,7 +227,8 @@ bool CommandProcessing()
 
 		wprintf(L"\nReturn Value : %d\n",returnValue);
 		if(returnValue == -1) wprintf(L"EXECUTE ERROR\n");
-	}
+		CloseHandle(pi.hProcess);
+	}*/
 
 	
 	wprintf(L"\n") ;
