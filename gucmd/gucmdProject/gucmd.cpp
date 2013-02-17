@@ -103,7 +103,7 @@ DWORD WINAPI CopyFileCommand(LPVOID lpParam)
 				//destDir가 폴더명인지 확인
 				WIN32_FIND_DATA destDirData;
 				HANDLE hDestDir = FindFirstFile(destDir,&destDirData);
-				if(hDestDir == INVALID_HANDLE_VALUE) return 0;
+			//	if(hDestDir == INVALID_HANDLE_VALUE)
 				if(destDirData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				{
 					if(destDir[wcslen(destDir)-1] != '\\')
@@ -225,6 +225,8 @@ bool CommandProcessing()
 		wchar_t directory[MAX_STR_LEN] = L"";
 		for(int i =4; i<wcslen(copyCommand); i++)
 			directory[i-4] = copyCommand[i];
+		if(wcscmp(directory,L"") == 0) wcscpy_s(directory,L".");
+		wprintf(L"%s",directory);
 		wcsncat(directory,L"\\*",3);
 		hDir = FindFirstFile(directory, &findData);
 		if(hDir == INVALID_HANDLE_VALUE){
